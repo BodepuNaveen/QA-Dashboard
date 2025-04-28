@@ -6,6 +6,9 @@ async function transcribeAudio() {
     return;
   }
 
+  // Show Transcribing Message
+  document.getElementById('outputText').value = "🛠️ Transcribing audio... please wait...";
+
   // 1. Upload the audio file to AssemblyAI
   const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
     method: 'POST',
@@ -18,7 +21,7 @@ async function transcribeAudio() {
   const uploadData = await uploadResponse.json();
   const audioUrl = uploadData.upload_url;
 
-  // 2. Start transcription request
+  // 2. Request transcription with speaker labels
   const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
     method: 'POST',
     headers: {
@@ -36,7 +39,7 @@ async function transcribeAudio() {
   const transcriptData = await transcriptResponse.json();
   const transcriptId = transcriptData.id;
 
-  // 3. Polling to check when transcription is ready
+  // 3. Polling for transcription completion
   let completed = false;
   let transcriptText = '';
   let wordCount = 0;
@@ -52,7 +55,6 @@ async function transcribeAudio() {
         let conversation = '';
         wordCount = 0;
 
-        // Smart Speaker Detection
         let speakerMap = {};
         checkData.utterances.slice(0, 5).forEach(utt => {
           const lowerText = utt.text.toLowerCase();
@@ -100,59 +102,49 @@ function downloadText() {
 }
 
 function generateQAReport() {
-  const empathy = document.getElementById('qaEmpathy').value;
-  const knowledge = document.getElementById('qaKnowledge').value;
-  const resolution = document.getElementById('qaResolution').value;
+  const transcript = window.latestTranscript || document.getElementById('outputText').value;
+  const wordCount = window.latestWordCount || transcript.split(' ').length;
 
-  const now = new Date();
-  const dateString = now.toISOString().split('T')[0];
-  const callID = `${dateString.replace(/-/g, '')}-001`;
-
+  // Dummy Auto Values for this demo
+  const callId = `2024-04-28-001`;
   const agentName = "Sam";
   const customerName = "Adam Wilson";
-  const durationMinutes = Math.max(5, Math.floor(window.latestWordCount / 70));
-  const transcriptWords = window.latestWordCount || 300;
+  const callDate = "28-Apr-2025";
+  const callDuration = "5 minutes";
 
-  const ahtStatus = durationMinutes <= 6 ? "Passed (Under 6 min)" : "Failed (Over 6 min)";
-  const agentAggressiveness = "No";
+  let empathyScore = 20;
+  let knowledgeScore = 30;
+  let resolutionScore = 30;
+  let complianceBonus = 5;
+  let ownershipBonus = 5;
+  let sentimentBonus = 5;
+  let ahtBonus = 5;
+  let aggressionPenalty = 0;
 
-  // Auto-Scoring
-  let totalScore = 0;
-  totalScore += (empathy === "Excellent") ? 30 : (empathy === "Good") ? 20 : 10;
-  totalScore += (knowledge === "Excellent") ? 30 : (knowledge === "Good") ? 20 : 10;
-  totalScore += (resolution === "Resolved") ? 30 : (resolution === "Escalated") ? 15 : 0;
-  totalScore += 5; // Compliance bonus
-  totalScore += 5; // Ownership bonus
-  totalScore += 5; // Sentiment bonus
-  if (ahtStatus.startsWith("Passed")) totalScore += 5;
-  const penalty = (agentAggressiveness === "Yes") ? -10 : 0;
-  totalScore += penalty;
+  const totalScore = empathyScore + knowledgeScore + resolutionScore + complianceBonus + ownershipBonus + sentimentBonus + ahtBonus - aggressionPenalty;
 
-  if (totalScore > 100) totalScore = 100;
+  let ratingStars = "★★★☆☆";
+  if (totalScore >= 90) ratingStars = "★★★★☆";
+  if (totalScore >= 95) ratingStars = "★★★★★";
 
-  const rating = totalScore >= 90 ? "★★★★★ (Excellent)"
-                : totalScore >= 75 ? "★★★★☆ (Good)"
-                : totalScore >= 60 ? "★★★☆☆ (Average)"
-                : "★★☆☆☆ (Poor)";
-
-  const report = `
+  const qaReport = `
 ===============================
          QA AUDIT REPORT
 ===============================
 
-Call ID           : ${callID}
+Call ID           : ${callId}
 Agent Name        : ${agentName}
 Customer Name     : ${customerName}
-Date              : ${dateString}
-Duration          : ${durationMinutes} minutes
-Transcript Words  : ${transcriptWords}
+Date              : ${callDate}
+Duration          : ${callDuration}
+Transcript Words  : ${wordCount}
 
 -------------------------------
 EVALUATION METRICS
 -------------------------------
-Empathy           : ${empathy}
-Knowledge         : ${knowledge}
-Resolution        : ${resolution}
+Empathy           : Good
+Knowledge         : Excellent
+Resolution        : Resolved
 Compliance Check  : Pass
 Policy Adherence  : Pass
 Active Listening  : Good
@@ -160,35 +152,34 @@ Escalation Handling: Correct
 Call Etiquette    : Pass
 Resolution Ownership : Yes
 Sentiment Handling : Good
-AHT Status        : ${ahtStatus}
-Agent Aggressiveness: ${agentAggressiveness}
+AHT Status        : Passed (Under 6 min)
+Agent Aggressiveness: No
 
 -------------------------------
 AUTO SCORES
 -------------------------------
-Empathy Score         : 30 / 30
+Empathy Score         : 20 / 30
 Knowledge Score       : 30 / 30
 Resolution Score      : 30 / 30
 Compliance Bonus      : +5
 Ownership Bonus       : +5
 Sentiment Handling    : +5
 AHT Bonus             : +5
-Aggressiveness Penalty: ${penalty}
+Aggressiveness Penalty: 0
 
 -------------------------------
 TOTAL QA SCORE: ${totalScore} / 100
-QA RATING     : ${rating}
+QA RATING     : ${ratingStars} (Excellent)
 
 -------------------------------
 SUMMARY COMMENTS
 -------------------------------
-The agent demonstrated good product knowledge and empathy.
-The issue was resolved successfully. No escalation was needed.
-Compliance and policies were followed.
-Overall excellent service performance.
+The agent demonstrated excellent product knowledge and was empathetic to the customer's concerns. 
+The issue was resolved professionally within the expected time frame. Compliance and policies were followed properly.
+Overall, this was an excellent customer service call.
 
 ===============================
-`;
+  `.trim();
 
-  document.getElementById('qaReport').textContent = report.trim();
+  document.getElementById('qaReport').textContent = qaReport;
 }
