@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio to Text + Full QA Dashboard</title>
+  <script defer src="script.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">Audio to Text + Full QA Dashboard 🚀</h1>
+
+    <!-- Upload Audio Section -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">Upload Audio</h2>
+      <input type="file" id="audioFile" accept="audio/*" class="mb-4">
+      <button onclick="transcribeAudio()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Transcribe</button>
+    </div>
+
+    <!-- Transcription Output -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">Transcription</h2>
+      <textarea id="outputText" rows="10" class="w-full p-2 border rounded" placeholder="Transcription will appear here..."></textarea>
+      <button onclick="downloadText()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded mt-4">Download Transcription</button>
+    </div>
+
+    <!-- Quality Audit Section -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">Quality Audit</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label>Empathy</label><select id="qaEmpathy" class="w-full border p-2 rounded"><option>Excellent</option><option>Good</option><option>Average</option><option>Poor</option></select></div>
+        <div><label>Knowledge</label><select id="qaKnowledge" class="w-full border p-2 rounded"><option>Excellent</option><option>Good</option><option>Average</option><option>Poor</option></select></div>
+        <div><label>Resolution Handling</label><select id="qaResolution" class="w-full border p-2 rounded"><option>Resolved</option><option>Escalated</option><option>Pending</option></select></div>
+        <div><label>Compliance Check</label><select id="qaCompliance" class="w-full border p-2 rounded"><option>Pass</option><option>Fail</option></select></div>
+        <div><label>Policy Adherence</label><select id="qaPolicy" class="w-full border p-2 rounded"><option>Pass</option><option>Fail</option></select></div>
+        <div><label>Active Listening</label><select id="qaListening" class="w-full border p-2 rounded"><option>Excellent</option><option>Good</option><option>Average</option><option>Poor</option></select></div>
+        <div><label>Escalation Handling</label><select id="qaEscalation" class="w-full border p-2 rounded"><option>Correct</option><option>Wrong</option></select></div>
+        <div><label>Call Etiquette</label><select id="qaEtiquette" class="w-full border p-2 rounded"><option>Pass</option><option>Fail</option></select></div>
+        <div><label>Resolution Ownership</label><select id="qaOwnership" class="w-full border p-2 rounded"><option>Yes</option><option>No</option></select></div>
+        <div><label>Sentiment Handling</label><select id="qaSentiment" class="w-full border p-2 rounded"><option>Good</option><option>Poor</option></select></div>
+      </div>
+      <button onclick="generateQAReport()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded mt-6">Generate QA Report</button>
+    </div>
+
+    <!-- QA Report Output -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">QA Report</h2>
+      <pre id="qaReport" class="bg-gray-50 p-4 border rounded overflow-x-auto"></pre>
+      <button id="downloadQAReport" onclick="downloadQAReport()" style="display:none;" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mt-4">Download QA Report</button>
+    </div>
+  </div>
+</body>
+</html>
