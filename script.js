@@ -5,34 +5,60 @@ async function transcribeAudio() {
     alert('Please select an audio file!');
     return;
   }
-  document.getElementById('outputText').value = 'Uploading and transcribing...';
-  const response = await fetch('https://api.assemblyai.com/v2/upload', {
+
+  document.getElementById('outputText').value = 'Uploading and transcribing... Please wait...';
+
+  // Upload the audio file
+  const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
     method: 'POST',
-    headers: { authorization: 'a1b381ccd87f469b9ea60f78b02ece0c' },
+    headers: {
+      authorization: 'a1b381ccd87f469b9ea60f78b02ece0c' // your working AssemblyAI key
+    },
     body: file
   });
-  const data = await response.json();
-  const audioUrl = data.upload_url;
-  const transcriptRes = await fetch('https://api.assemblyai.com/v2/transcript', {
+
+  const uploadData = await uploadResponse.json();
+  const audioUrl = uploadData.upload_url;
+
+  // Start the transcription with Speaker Labels ON
+  const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
     method: 'POST',
     headers: {
       authorization: 'a1b381ccd87f469b9ea60f78b02ece0c',
       'content-type': 'application/json'
     },
-    body: JSON.stringify({ audio_url: audioUrl })
+    body: JSON.stringify({
+      audio_url: audioUrl,
+      speaker_labels: true
+    })
   });
-  const transcriptData = await transcriptRes.json();
+
+  const transcriptData = await transcriptResponse.json();
   const transcriptId = transcriptData.id;
 
+  // Check for completion
   let completed = false;
   while (!completed) {
-    const checkRes = await fetch('https://api.assemblyai.com/v2/transcript/' + transcriptId, {
-      headers: { authorization: 'a1b381ccd87f469b9ea60f78b02ece0c' }
+    const checkResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+      headers: {
+        authorization: 'a1b381ccd87f469b9ea60f78b02ece0c'
+      }
     });
-    const checkData = await checkRes.json();
+    const checkData = await checkResponse.json();
+
     if (checkData.status === 'completed') {
       completed = true;
-      document.getElementById('outputText').value = checkData.text;
+      const utterances = checkData.utterances;
+      if (utterances) {
+        let conversation = '';
+        utterances.forEach(utt => {
+          const speaker = utt.speaker === 0 ? "Agent" : "Customer";
+          conversation += `${speaker}: ${utt.text}\n`;
+        });
+        document.getElementById('outputText').value = conversation.trim();
+      } else {
+        document.getElementById('outputText').value = checkData.text;
+      }
     } else if (checkData.status === 'failed') {
       alert('Transcription failed!');
       return;
